@@ -13,6 +13,9 @@
     "name": "sign"
     "description": "Signing"
   -
+    "name": "service"
+    "description": "Service using eSignature callback API"
+  -
     "name": "internal"
     "description": "Internal API"
   -
@@ -21,9 +24,6 @@
   -
     "name": "audit"
     "description": "Audit view"
-  -
-    "name": "service"
-    "description": "Service using eSignature callback API"
 
 "paths":
   "/{version}/sign/interactive":
