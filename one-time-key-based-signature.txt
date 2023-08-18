@@ -1,0 +1,63 @@
+sequenceDiagram
+    participant e-Service
+    participant e-Signature BB frontend
+    participant e-Signature BB backend
+    participant HSM
+    participant ID BB
+    participant CA
+    participant TSA
+    activate e-Service
+    Note right of e-Service: Get document hash with client side library
+    e-Service->>e-Signature BB backend: Browser redirects to /sign/interactive passing document hash
+    deactivate e-Service
+    activate e-Signature BB backend
+    e-Signature BB backend-->>e-Signature BB frontend: Page to display the available eSignature models
+    deactivate e-Signature BB backend
+    activate e-Signature BB frontend
+    rect rgb(230, 245, 255)
+    alt One Time Key Based Signature Model
+        e-Signature BB frontend->>e-Signature BB frontend: 
+        Note right of e-Signature BB frontend: User selects "Use National ID to Sign"
+        e-Signature BB frontend->>ID BB: Browser redirects for user authentication
+        deactivate e-Signature BB frontend
+        activate ID BB
+        ID BB->>ID BB: 
+        Note right of ID BB: User logins using National ID
+        ID BB->>e-Signature BB frontend: Browser redirects to callback URL with authorization code
+        deactivate ID BB
+        activate e-Signature BB frontend
+        e-Signature BB frontend->>e-Signature BB backend: authorization code & document hash
+        activate e-Signature BB backend
+        e-Signature BB backend->>ID BB: Multiple API exchanges
+        activate ID BB
+        ID BB-->>e-Signature BB backend: User data
+        deactivate ID BB
+        e-Signature BB backend->>HSM: Create key with user data
+        activate HSM
+        HSM-->>e-Signature BB backend: CSR
+        deactivate HSM
+        e-Signature BB backend->>CA: Create certificate with CSR & publish
+        activate CA
+        CA-->>e-Signature BB backend: Certificate
+        deactivate CA
+        e-Signature BB backend->>HSM: Sign with key & delete
+        activate HSM
+        HSM-->>e-Signature BB backend: signature
+        deactivate HSM
+    end
+    end
+    e-Signature BB backend->>TSA: Get timestamp for signature
+    activate TSA
+    TSA-->>e-Signature BB backend: Timestamp rfc3161
+    deactivate TSA
+    e-Signature BB backend-->>e-Signature BB frontend: Signature Id
+    deactivate e-Signature BB backend
+    e-Signature BB frontend->>e-Service: Browser redirects to callback URL with Signature Id
+    deactivate e-Signature BB frontend
+    activate e-Service
+    e-Service->>e-Signature BB backend: API call /sign/response
+    activate e-Signature BB backend
+    e-Signature BB backend-->>e-Service: signature & timestamp
+    deactivate e-Signature BB backend
+    Note right of e-Service: Merge signature using client side library
+    deactivate e-Service
