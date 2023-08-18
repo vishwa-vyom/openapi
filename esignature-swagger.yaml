@@ -1,13 +1,13 @@
 
 "openapi": "3.0.2"
 "info":
-  "title": "Remote SCD API"
+  "title": "Govstack eSignature BB API Specification"
   "description": "REST API for eSignature BB"
   "version": "1.0.0"
 "servers":
   -
     "url": "http://localhost:9090"
-    "description": "Optional server description"
+    "description": "Local server"
 "tags":
   -
     "name": "sign"
@@ -26,6 +26,112 @@
     "description": "Service using eSignature callback API"
 
 "paths":
+  "/{version}/sign/interactive":
+    "get":
+      "tags":
+        - "sign"
+      "summary": "Create a eSignature with direct user interaction"
+      "description": "Provide interactive html for single use key based signing or pseodonym entry form for SCD based signing"
+      "parameters":
+        -
+          "in": "path"
+          "name": "version"
+          "schema":
+            "type": "string"
+            "example": "v1"
+          "required": true
+          "description": "API version"
+        -
+          "in": "query"
+          "name": "format"
+          "schema":
+            "type": "string"
+            "enum":
+              - "XAdES"
+              - "CAdES"
+              - "ASIC"
+              - "JWS"
+              - "PAdES"
+          "example": "PAdES"
+          "description": "Pre format the signature in a give format so that it can be more inserted by the formatting library XAdES|CAdES|ASIC|JWS|PAdES"
+        -
+          "in": "query"
+          "name": "hash"
+          "schema":
+            "type": "string"
+            "format": "base64urlencoded"
+            "description": "hash as byte array encoded in base64"
+            "example": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        -
+          "in": "query"
+          "name": "hashType"
+          "schema":
+            "type": "string"
+            "enum":
+              - "SHA2-256"
+              - "SHA2-384"
+              - "SHA2-512"
+              - "SHA3-256"
+              - "SHA3-384"
+              - "SHA3-512"
+              - "BLAKE2B"
+            "example": "SHA2-256"
+            "description": "hash type used SHA2-256|SHA2-384|SHA2-512|SHA3-256|SHA3-384|SHA3-512|BLAKE2B"
+        -
+          "in": "query"
+          "name": "dataToBeDisplayed"
+          "schema":
+            "type": "string"
+            "format": "base64urlencoded"
+            "example": "UGxlYXNlIHNpZ24gdGhlIGNvbnNlbnQgZm9ybSBhcyByZXF1ZXN0ZWQgKHRyYW5zYWN0aW9uSWQ6MTIzNCk"
+            "description": "Data to be displayed on users SCD (for ex transactionId)"
+        -
+          "in": "query"
+          "name": "requestTimestamp"
+          "schema":
+            "type": "string"
+            "format": "urlencoded"
+            "description": "Timestamp in ISO 8601"
+            "example": "2023-03-20T09%3A12%3A28Z"
+        -
+          "in": "query"
+          "name": "nonce"
+          "schema":
+            "type": "string"
+            "format":  "urlencoded"
+            "description": "hex string value of hash to mitigate replay attacks"
+            "example": "d2dff00401c92ca6879ef5f0938ce31580898266d59832d8531e8d04fc3898a6"  
+        -
+          "in": "query"
+          "name": "state"
+          "schema":
+            "type": "string"
+            "format":  "urlencoded"
+            "description": "hex string value of hash used to maintain state between the request and the callback"
+            "example": "2569cb4125cb7303f0f16782e7e2814b2269888c734af4c90639653e4f92d3a5"  
+        -
+          "in": "query"
+          "name": "callbackUrl"
+          "schema":
+            "type": "string"
+            "format": "urlencoded"
+            "description": "Callback url to be sent on signing response. Callback URL will have query parameters from SignatureResponse statusCode(base64urlencoded), statusMessage(base64urlencoded), signature (base64urlencoded), certificate (base64urlencoded), signatureTimestamp (base64urlencoded), responseTimestamp (urlencoded), pseudonymToken (jwt)"
+            "example": "https%3A%2F%2Fmysite"
+      "responses":
+        "200":
+          "description": "Returns html for entering pseudonym"
+          "content":
+            "text/html":
+              "schema":
+                "type": "string"
+        "400": 
+          "description": "Bad request"
+        "404": 
+          "description": "Not found"
+        "422":
+          "description": "Mandatory field not present"
+        "429": 
+          "description": "Too many requests"
   "/{version}/sign/response/{signatureId}":
     "get":
       "tags":
@@ -546,112 +652,6 @@
         "429": 
           "description": "Too many requests"
 
-  "/{version}/sign/interactive":
-    "get":
-      "tags":
-        - "sign"
-      "summary": "Create a SCD eSignature with interactive pseodonym entry"
-      "description": "Provide interactive html for pseodonym entry form that will get the signature via sign/pseudonym and will call callbackUrl"
-      "parameters":
-        -
-          "in": "path"
-          "name": "version"
-          "schema":
-            "type": "string"
-            "example": "v1"
-          "required": true
-          "description": "API version"
-        -
-          "in": "query"
-          "name": "format"
-          "schema":
-            "type": "string"
-            "enum":
-              - "XAdES"
-              - "CAdES"
-              - "ASIC"
-              - "JWS"
-              - "PAdES"
-          "example": "PAdES"
-          "description": "Pre format the signature in a give format so that it can be more inserted by the formatting library XAdES|CAdES|ASIC|JWS|PAdES"
-        -
-          "in": "query"
-          "name": "hash"
-          "schema":
-            "type": "string"
-            "format": "base64urlencoded"
-            "description": "hash as byte array encoded in base64"
-            "example": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-        -
-          "in": "query"
-          "name": "hashType"
-          "schema":
-            "type": "string"
-            "enum":
-              - "SHA2-256"
-              - "SHA2-384"
-              - "SHA2-512"
-              - "SHA3-256"
-              - "SHA3-384"
-              - "SHA3-512"
-              - "BLAKE2B"
-            "example": "SHA2-256"
-            "description": "hash type used SHA2-256|SHA2-384|SHA2-512|SHA3-256|SHA3-384|SHA3-512|BLAKE2B"
-        -
-          "in": "query"
-          "name": "dataToBeDisplayed"
-          "schema":
-            "type": "string"
-            "format": "base64urlencoded"
-            "example": "UGxlYXNlIHNpZ24gdGhlIGNvbnNlbnQgZm9ybSBhcyByZXF1ZXN0ZWQgKHRyYW5zYWN0aW9uSWQ6MTIzNCk"
-            "description": "Data to be displayed on users SCD (for ex transactionId)"
-        -
-          "in": "query"
-          "name": "requestTimestamp"
-          "schema":
-            "type": "string"
-            "format": "urlencoded"
-            "description": "Timestamp in ISO 8601"
-            "example": "2023-03-20T09%3A12%3A28Z"
-        -
-          "in": "query"
-          "name": "nonce"
-          "schema":
-            "type": "string"
-            "format":  "urlencoded"
-            "description": "hex string value of hash to mitigate replay attacks"
-            "example": "d2dff00401c92ca6879ef5f0938ce31580898266d59832d8531e8d04fc3898a6"  
-        -
-          "in": "query"
-          "name": "state"
-          "schema":
-            "type": "string"
-            "format":  "urlencoded"
-            "description": "hex string value of hash used to maintain state between the request and the callback"
-            "example": "2569cb4125cb7303f0f16782e7e2814b2269888c734af4c90639653e4f92d3a5"  
-        -
-          "in": "query"
-          "name": "callbackUrl"
-          "schema":
-            "type": "string"
-            "format": "urlencoded"
-            "description": "Callback url to be sent on signing response. Callback URL will have query parameters from SignatureResponse statusCode(base64urlencoded), statusMessage(base64urlencoded), signature (base64urlencoded), certificate (base64urlencoded), signatureTimestamp (base64urlencoded), responseTimestamp (urlencoded), pseudonymToken (jwt)"
-            "example": "https%3A%2F%2Fmysite"
-      "responses":
-        "200":
-          "description": "Returns html for entering pseudonym"
-          "content":
-            "text/html":
-              "schema":
-                "type": "string"
-        "400": 
-          "description": "Bad request"
-        "404": 
-          "description": "Not found"
-        "422":
-          "description": "Mandatory field not present"
-        "429": 
-          "description": "Too many requests"
   "/{version}/esignature/callback":
     "get":
       "tags":
