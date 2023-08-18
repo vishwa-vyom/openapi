@@ -1,0 +1,43 @@
+sequenceDiagram
+    participant e-Service
+    participant e-Signature BB frontend
+    participant e-Signature BB backend
+    participant Remote SCD Service
+    participant TSA
+    activate e-Service
+    Note right of e-Service: Get document hash with client side library
+    e-Service->>e-Signature BB backend: Browser redirects to /sign/interactive passing document hash
+    deactivate e-Service
+    activate e-Signature BB backend
+    e-Signature BB backend-->>e-Signature BB frontend: Page to display the available eSignature models
+    deactivate e-Signature BB backend
+    activate e-Signature BB frontend
+    rect rgb(230, 245, 255)
+    alt SCD Based Signature Model
+        e-Signature BB frontend->>e-Signature BB frontend: 
+        Note right of e-Signature BB frontend: User selects "Use SCD to Sign" <br> and enters pseodonym
+        e-Signature BB frontend->>e-Signature BB backend: API call /sign/pseudonym
+        activate e-Signature BB backend
+        e-Signature BB backend->>Remote SCD Service: document hash, SCD Remote Id
+        activate Remote SCD Service
+        Remote SCD Service->>Remote SCD Service: 
+        Note right of Remote SCD Service: User enters Security PIN
+        Remote SCD Service-->>e-Signature BB backend: Signature
+        deactivate Remote SCD Service
+    end
+    end
+    e-Signature BB backend->>TSA: Get timestamp for signature
+    activate TSA
+    TSA-->>e-Signature BB backend: Timestamp rfc3161
+    deactivate TSA
+    e-Signature BB backend-->>e-Signature BB frontend: Signature Id
+    deactivate e-Signature BB backend
+    e-Signature BB frontend->>e-Service: Browser redirects to callback URL with Signature Id
+    deactivate e-Signature BB frontend
+    activate e-Service
+    e-Service->>e-Signature BB backend: API call /sign/response
+    activate e-Signature BB backend
+    e-Signature BB backend-->>e-Service: signature&timestamp
+    deactivate e-Signature BB backend
+    Note right of e-Service: Merge signature using client side library
+    deactivate e-Service
